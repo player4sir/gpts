@@ -2,13 +2,23 @@ from flask import Flask, jsonify, request
 import os
 import psycopg2
 from psycopg2.extras import RealDictCursor
+from urllib.parse import urlparse
 
 app = Flask(__name__)
 
-# Connect to PostgreSQL using Vercel environment variables
-DATABASE_URL = os.environ.get('POSTGRES_URL')
+# Parse the DATABASE_URL
+DATABASE_URL = os.environ.get('DATABASE_URL')
+url = urlparse(DATABASE_URL)
 
-conn = psycopg2.connect(DATABASE_URL, sslmode='require')
+# Connect to PostgreSQL using parsed components
+conn = psycopg2.connect(
+    dbname=url.path[1:],
+    user=url.username,
+    password=url.password,
+    host=url.hostname,
+    port=url.port,
+    sslmode='require'
+)
 
 # Create table if not exists
 
@@ -109,6 +119,21 @@ def delete_data(title):
     if deleted_item:
         return jsonify({"message": "Item deleted successfully"})
     return jsonify({"error": "Item not found"}), 404
+
+# Import data from dt.json
+# @app.route('/api/import', methods=['POST'])
+# def import_data():
+#     try:
+#         with open('dt.json', 'r', encoding='utf-8') as file:
+#             data = json.load(file)
+#         save_data(data)
+#         return jsonify({"message": "Data imported successfully"}), 200
+#     except json.JSONDecodeError as e:
+#         return jsonify({"error": f"Invalid JSON format: {str(e)}"}), 400
+#     except FileNotFoundError:
+#         return jsonify({"error": "dt.json file not found"}), 404
+#     except Exception as e:
+#         return jsonify({"error": f"An error occurred: {str(e)}"}), 500
 
 
 # Create table on startup
