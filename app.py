@@ -2,16 +2,22 @@ from flask import Flask, jsonify, request
 import os
 import psycopg2
 from psycopg2.extras import RealDictCursor
-from dotenv import load_dotenv
-import json
-
-load_dotenv()
 
 app = Flask(__name__)
 
-# Connect to PostgreSQL
-POSTGRES_URL = os.getenv('POSTGRES_URL')
-conn = psycopg2.connect(POSTGRES_URL, sslmode='require')
+# Connect to PostgreSQL using Vercel environment variables
+POSTGRES_URL = os.environ.get('POSTGRES_URL')
+POSTGRES_USER = os.environ.get('POSTGRES_USER')
+POSTGRES_PASSWORD = os.environ.get('POSTGRES_PASSWORD')
+POSTGRES_DATABASE = os.environ.get('POSTGRES_DATABASE')
+
+conn = psycopg2.connect(
+    host=os.environ.get('POSTGRES_HOST'),
+    database=POSTGRES_DATABASE,
+    user=POSTGRES_USER,
+    password=POSTGRES_PASSWORD,
+    sslmode='require'
+)
 
 # Create table if not exists
 
@@ -114,8 +120,6 @@ def delete_data(title):
     return jsonify({"error": "Item not found"}), 404
 
 # Import data from dt.json
-
-
 # @app.route('/api/import', methods=['POST'])
 # def import_data():
 #     try:
